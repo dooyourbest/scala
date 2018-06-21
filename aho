@@ -1,48 +1,52 @@
+
 import scala.collection.mutable.ArrayBuffer 
 import scala.collection.mutable.ListBuffer
 class Ahocorasick {
-    class Node{
-        var next:Map[String,Node] = Map()
-        var fail:Node
-        var isWord = false
-    }
     var root = new Node()
     /**
      * 建立trie树
      */
     def addWord(word :String):Unit={
         var tmpNode = this.root
+        //遍历关键词 
         for(singleString <- word){
             var singleKey = singleString.toString()
-            if( false==tmpNode.next.contains( singleKey ) ){
+            //如果next 的键值 不包含关键词的单个字，增加
+            if( false == tmpNode.next.contains( singleKey ) ){
                 var newNode = new Node()
                 tmpNode.next += ( singleKey->newNode )         
             }
+            //指向下个节点
             tmpNode = tmpNode.next( singleKey )
-         tmpNode.isWord=true
         }
+        //完成之后，标记单次
+        tmpNode.isWord=true
     }
     /**
      * 根据kmp算法 建立自动机结构
      */
     def make():Unit={
+      //利用buffer构造一个栈，把根节点放入栈中，利用栈的特性对树进行遍历
       var nodeArray:ArrayBuffer[Node] = ArrayBuffer(this.root)
+      //当栈不为空的时候,进行操作，其实
       while(nodeArray.length>0){
           var lenthNodeArray = nodeArray.length
-          var tmpNode=nodeArray(lenthNodeArray-1) //设置当前节点
-          nodeArray.remove(lenthNodeArray) //删除最后一个节点
+          var tmpNode=nodeArray(lenthNodeArray-1)   //设置当前节点
+          nodeArray.remove(lenthNodeArray - 1)      //删除最后一个节点（出栈）
           for(singleKey <- tmpNode.next.keys){
                 if ( tmpNode==this.root){
-                    tmpNode.fail = this.root
+                    tmpNode.next(singleKey).fail = this.root        //若是一级节点（关键词首字）失败后 fail 指向root
                 }else{
-                    var point = tmpNode.fail
+                    var point = tmpNode.fail        //遍历当前键值下的所有key然后匹配key，通过fail指针的递归 寻找失败后的最长的匹配
                     var whileLoopFlag = true
                     while ( point != null && whileLoopFlag ){
-                        if ( tmpNode.next.contains(singleKey) ){
-                            tmpNode.next(singleKey).fail = point.fail
+                        if ( point.next.contains(singleKey) ){
+                            tmpNode.next(singleKey).fail = point.next(singleKey)
                             whileLoopFlag=false
                         }
-                        point=point.fail
+                        if (true == whileLoopFlag){
+                              point=point.fail
+                        }
                     }
                     if ( point == null ){
                       tmpNode.next(singleKey).fail=this.root
@@ -64,22 +68,26 @@ class Ahocorasick {
          var startWordIndex = 0
          var endWordIndex = 0
          var currentPosition = 0
-         while (currentPosition < word.length){
+         var flag=true
+         while (currentPosition < word.length && flag){
              var singleString = word(currentPosition)
              var singleKey = singleString.toString()
              //没有匹配到时候 
-             if ( point.next.contains( singleKey ) ==false && point != this.root ){
+             while (point.next.contains( singleKey ) == false && point != this.root ){
                  point = point.fail
              }
-             if ( point.next.contains( singleKey )){
-                 if( point==this.root )
-                     startWordIndex = currentPosition //匹配开始记录开始位置
-                     point=point.next( singleKey ) //转移 状态机的状态
+             
+             if (point.next.contains( singleKey )){
+                   if( point == this.root ){
+                    startWordIndex = currentPosition //匹配开始记录开始位置
+                   }
+                   point=point.next( singleKey ) //转移 状态机的状态
              }else{
                  point = this.root
              }
              if( point.isWord ){
                  var wordStartEnd=(startWordIndex,currentPosition)
+                 println(startWordIndex)
                  result += wordStartEnd
              }
              currentPosition += 1
@@ -89,11 +97,17 @@ class Ahocorasick {
     }
 }        
 object Ahocorasick{
-  def main():Unit={
+  def main(args: Array[String]):Unit={
       var aho = new Ahocorasick()
-      aho.addWord("abc")
-      aho.addWord("de")
+      aho.addWord("测试")
+      aho.addWord("我是")
       aho.make()
-      aho.search("abcdefabc")
+      var res = aho.search("测试123我是，我是")
+      
   }
 }
+ class Node{
+        var next:Map[String,Node] = Map()
+        var fail:Node= null
+        var isWord = false
+    }
