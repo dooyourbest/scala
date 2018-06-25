@@ -1,6 +1,6 @@
-
 import scala.collection.mutable.ArrayBuffer 
 import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.Map
 class Ahocorasick {
     var root = new Node()
     /**
@@ -69,6 +69,7 @@ class Ahocorasick {
          var endWordIndex = 0
          var currentPosition = 0
          var flag=true
+         var keyWordMap:Map[String,Int] = Map()
          while (currentPosition < word.length && flag){
              var singleString = word(currentPosition)
              var singleKey = singleString.toString()
@@ -86,14 +87,28 @@ class Ahocorasick {
                  point = this.root
              }
              if( point.isWord ){
-                 var wordStartEnd=(startWordIndex,currentPosition)
-                 println(startWordIndex)
+                 var wordStartEnd=(startWordIndex,currentPosition)   
                  result += wordStartEnd
              }
              currentPosition += 1
          }
+         //以下是合计
+        
          return result
          
+    }
+     
+    def countKeyWord(word:String):Map[ String, Int ]={
+      val keyWordMap:Map[String, Int ] = Map ()
+      var mergeKeyWord=( keyWord:String )=>{
+          if( keyWordMap.contains( keyWord ) ){
+              keyWordMap(keyWord)+=1
+          }else{
+              keyWordMap += (keyWord->1)
+          }
+      }
+      this.search(word).map( argv=>mergeKeyWord( word.slice(argv._1, argv._2+1) ) )
+      return  keyWordMap
     }
 }        
 object Ahocorasick{
@@ -102,7 +117,8 @@ object Ahocorasick{
       aho.addWord("测试")
       aho.addWord("我是")
       aho.make()
-      var res = aho.search("测试123我是，我是")
+      var res = aho.countKeyWord("测试123我是，我是")
+      println(res)
       
   }
 }
