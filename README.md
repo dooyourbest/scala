@@ -1,3 +1,2 @@
 # scala
-scala
-scala学习
+scala ac自动机获取
